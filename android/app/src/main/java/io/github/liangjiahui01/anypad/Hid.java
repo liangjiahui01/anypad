@@ -34,6 +34,7 @@ final class Hid {
     static final int LEFT = 1, RIGHT = 2, MIDDLE = 4;
 
     private static final byte ID_MOUSE = 1, ID_KEYBOARD = 2, ID_CONSUMER = 3;
+    private static final int WHEEL_RES = 16; // wheel counts per detent once the host sets the multiplier
 
     // Report 1: 5 buttons, 16-bit relative X/Y, wheel, horizontal pan (AC Pan).
     // Report 2: a boot-style keyboard (modifiers + 6 keys).
@@ -44,8 +45,19 @@ final class Hid {
         0x05, 0x09, 0x19, 0x01, 0x29, 0x05, 0x15, 0x00, 0x25, 0x01, 0x95, 0x05, 0x75, 0x01, 0x81, 0x02,
         0x95, 0x01, 0x75, 0x03, 0x81, 0x01,
         0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x16, 0x01, 0x80, 0x26, 0xFF, 0x7F, 0x75, 0x10, 0x95, 0x02, 0x81, 0x06,
+        // Wheel and pan, each in a logical collection with a Resolution Multiplier (feature report 1):
+        // the host sets it to 16, then one wheel count is 1/16 of a detent (high-resolution scrolling)
+        0xA1, 0x02,
+        0x09, 0x48, 0x15, 0x00, 0x25, 0x01, 0x35, 0x01, 0x45, WHEEL_RES, 0x75, 0x02, 0x95, 0x01, 0xB1, 0x02,
+        0x35, 0x00, 0x45, 0x00,
         0x09, 0x38, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
+        0xC0,
+        0xA1, 0x02,
+        0x09, 0x48, 0x15, 0x00, 0x25, 0x01, 0x35, 0x01, 0x45, WHEEL_RES, 0x75, 0x02, 0x95, 0x01, 0xB1, 0x02,
+        0x35, 0x00, 0x45, 0x00,
+        0x75, 0x04, 0x95, 0x01, 0xB1, 0x01,
         0x05, 0x0C, 0x0A, 0x38, 0x02, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x06,
+        0xC0,
         0xC0, 0xC0,
 
         0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, ID_KEYBOARD,
@@ -92,6 +104,9 @@ final class Hid {
     private boolean recording;
     private final ArrayList<long[]> recorded = new ArrayList<>(); // {dx, dy, gap ms}
     private long sent, failed, lastLog;
+    // Feature report 1 as the host last set it. Linux applies the multiplier whether or not the
+    // request reaches us, so wheel counts are always sent in 1/WHEEL_RES detents.
+    private volatile int multipliers = 0x05;
 
     private Hid(Context app) {
         this.app = app;
@@ -295,11 +310,19 @@ final class Hid {
         }
 
         @Override public void onGetReport(BluetoothDevice d, byte type, byte id, int size) {
+            if (proxy != null && type == BluetoothHidDevice.REPORT_TYPE_FEATURE && id == ID_MOUSE) {
+                proxy.replyReport(d, type, id, new byte[]{(byte) multipliers});
+                return;
+            }
             int len = id == ID_MOUSE ? 7 : id == ID_KEYBOARD ? 8 : 2;
             if (proxy != null) proxy.replyReport(d, type, id, new byte[len]);
         }
 
         @Override public void onSetReport(BluetoothDevice d, byte type, byte id, byte[] data) {
+            if (type == BluetoothHidDevice.REPORT_TYPE_FEATURE && id == ID_MOUSE && data != null && data.length > 0) {
+                multipliers = data[0] & 0xff;
+                Log.i("Anypad", "host set the wheel resolution multipliers: 0x" + Integer.toHexString(multipliers));
+            }
             if (proxy != null) proxy.reportError(d, BluetoothHidDevice.ERROR_RSP_SUCCESS);
         }
     };
@@ -333,7 +356,7 @@ final class Hid {
 
     /** Scrolls by wheel detents (fractions carry over). Positive wheel = up, positive pan = right. */
     void scroll(float wheel, float pan) {
-        io.post(() -> { accWheel += wheel; accPan += pan; queueFlush(); });
+        io.post(() -> { accWheel += wheel * WHEEL_RES; accPan += pan * WHEEL_RES; queueFlush(); });
     }
 
     void press(int button) {
