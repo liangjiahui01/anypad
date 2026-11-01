@@ -178,6 +178,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         super.onResume();
         updateHint(); // the mapping may have changed in settings
         hid.keepAwake(true);
+        hid.sync(); // the connection may have changed while away
     }
 
     @Override

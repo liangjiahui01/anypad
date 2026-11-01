@@ -219,13 +219,37 @@ final class Hid {
             BluetoothDevice d = lastDevice();
             // A device that was unpaired would get a pairing request from connect(): leave it to the user
             if (d == null || d.getBondState() != BluetoothDevice.BOND_BONDED) return;
-            if (state == OFF) {
+            if (sync()) return;
+            if (proxy.getConnectionState(d) == BluetoothProfile.STATE_DISCONNECTED) {
                 setState(d, CONNECTING);
                 if (!proxy.connect(d)) setState(d, OFF);
             }
             main.postDelayed(this, RETRY_MS);
         }
     };
+
+    /**
+     * Asks the Bluetooth stack what is actually connected and adopts it. Returns whether a device is connected.
+     */
+    boolean sync() {
+        if (proxy == null) return false;
+        java.util.List<BluetoothDevice> on;
+        try {
+            on = proxy.getConnectedDevices();
+        } catch (RuntimeException e) {
+            return false;
+        }
+        if (on.isEmpty()) {
+            if (state == CONNECTED) setState(device, OFF);
+            return false;
+        }
+        BluetoothDevice d = device != null && on.contains(device) ? device : on.get(0);
+        if (state != CONNECTED || !d.equals(device)) {
+            Prefs.lastDevice(app, d.getAddress());
+            setState(d, CONNECTED);
+        }
+        return true;
+    }
 
     private void setState(BluetoothDevice d, int s) {
         device = d;
@@ -251,6 +275,9 @@ final class Hid {
 
         @Override public void onConnectionStateChanged(BluetoothDevice d, int s) {
             main.post(() -> {
+                // Events can arrive late or out of order (a CONNECTING after the CONNECTED it led to):
+                // whatever this one says, a device the stack reports as connected wins.
+                if (sync()) return;
                 if (s == BluetoothProfile.STATE_CONNECTED) {
                     Prefs.lastDevice(app, d.getAddress());
                     setState(d, CONNECTED);
