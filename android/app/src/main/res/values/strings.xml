@@ -27,6 +27,7 @@
     <string name="key_vol_up">Volume up</string>
     <string name="key_vol_down">Volume down</string>
     <string name="hint_short">%1$s</string>
+    <string name="hint_pair">%1$s: %2$s</string>
     <string name="hint_long">Hold %1$s</string>
 
     <string name="act_none">Nothing</string>
@@ -50,9 +51,6 @@
     <string name="scroll_note">Swipe moves the content like a finger on the screen and flings. Mouse wheel scrolls in steps; some apps (web pages) prefer it.</string>
     <string name="scroll_speed">Scroll speed</string>
     <string name="haptics">Vibrate on click</string>
-    <string name="sec_screen">Screen</string>
-    <string name="dim">Dim while connected</string>
-    <string name="dim_note">The phone screen stays on so the keys keep working. Touch the top bar to brighten it for a few seconds.</string>
     <string name="sec_other">Other</string>
     <string name="reset">Restore defaults</string>
     <string name="reset_confirm">Restore the default key mapping and trackpad settings?</string>

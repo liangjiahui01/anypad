@@ -35,12 +35,10 @@ import java.util.Set;
 @SuppressLint("MissingPermission")
 public final class MainActivity extends Activity implements Hid.Listener, PadView.Host {
     private static final int REQ_PERMS = 1;
-    private static final long BRIGHT_MS = 6000;
 
     private Hid hid;
     private TextView chip, hint, padTitle, padSub, error;
     private Vibrator vibrator;
-    private boolean bright = true;
 
     @Override
     protected void onCreate(Bundle b) {
@@ -179,7 +177,13 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
     protected void onResume() {
         super.onResume();
         updateHint(); // the mapping may have changed in settings
-        wake();
+        hid.keepAwake(true);
+    }
+
+    @Override
+    protected void onPause() {
+        hid.keepAwake(false);
+        super.onPause();
     }
 
     @Override
@@ -259,7 +263,6 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
     }
 
     private void showDevices() {
-        wake();
         BluetoothAdapter a = hid.adapter();
         if (a == null || !hasPerms()) { requestPermissions(perms(), REQ_PERMS); return; }
         Set<BluetoothDevice> bonded = a.getBondedDevices();
@@ -352,41 +355,17 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
             Action a = Prefs.action(this, k);
             if (a == Action.NONE) continue;
             if (s.length() > 0) s.append("  ·  ");
-            s.append(getString(k.longPress ? R.string.hint_long : R.string.hint_short, getString(k.label)))
-                .append(' ').append(getString(a.label));
+            String key = getString(k.longPress ? R.string.hint_long : R.string.hint_short, getString(k.label));
+            s.append(getString(R.string.hint_pair, key, getString(a.label)));
         }
         hint.setText(s);
     }
 
-    // ---- screen: stays on while connected, dims a few seconds after the last touch outside the pad -----------------
-
-    private final Runnable dimNow = () -> { bright = false; screenState(); };
-
-    private void wake() {
-        bright = true;
-        screenState();
-        chip.removeCallbacks(dimNow);
-        chip.postDelayed(dimNow, BRIGHT_MS);
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent e) {
-        // Touching anything but the pad (top bar, buttons) brightens the screen for a while
-        if (e.getActionMasked() == MotionEvent.ACTION_DOWN && e.getY() < chip.getRootView().getHeight() * 0.12f) wake();
-        return super.dispatchTouchEvent(e);
-    }
+    // ---- screen: stays on while connected, so the volume keys keep working --------------------------------------
 
     private void screenState() {
-        boolean on = hid.state() == Hid.CONNECTED;
-        Window w = getWindow();
-        if (on) w.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        else w.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        WindowManager.LayoutParams lp = w.getAttributes();
-        float want = on && !bright && Prefs.dim(this) ? 0.02f : WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
-        if (lp.screenBrightness != want) {
-            lp.screenBrightness = want;
-            w.setAttributes(lp);
-        }
+        if (hid.state() == Hid.CONNECTED) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     // ---- feedback --------------------------------------------------------------------------------------------------

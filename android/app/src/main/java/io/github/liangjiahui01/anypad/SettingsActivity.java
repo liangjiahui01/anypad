@@ -70,10 +70,6 @@ public final class SettingsActivity extends Activity {
         slider(R.string.scroll_speed, 0.4f, 3f, Prefs.scrollSpeed(this), v -> Prefs.scrollSpeed(this, v));
         toggle(R.string.haptics, Prefs.haptics(this), v -> Prefs.haptics(this, v));
 
-        section(R.string.sec_screen);
-        toggle(R.string.dim, Prefs.dim(this), v -> Prefs.dim(this, v));
-        note(R.string.dim_note);
-
         section(R.string.sec_other);
         row(getString(R.string.reset), null, v -> new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setMessage(R.string.reset_confirm)

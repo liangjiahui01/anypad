@@ -50,7 +50,7 @@ final class Prefs {
     }
 
     /** Pointer speed: phone pixels times this. */
-    static float sensitivity(Context c) { return sp(c).getFloat("sensitivity", 1.2f); }
+    static float sensitivity(Context c) { return sp(c).getFloat("sensitivity", 1.0f); }
 
     static void sensitivity(Context c, float v) { sp(c).edit().putFloat("sensitivity", v).apply(); }
 
@@ -59,19 +59,14 @@ final class Prefs {
 
     static void scrollSpeed(Context c, float v) { sp(c).edit().putFloat("scroll_speed", v).apply(); }
 
-    /** "drag": two fingers press and drag, like a finger on the screen. "wheel": a mouse wheel. */
-    static String scrollMode(Context c) { return sp(c).getString("scroll_mode", SCROLL_DRAG); }
+    /** "wheel": a mouse wheel (the pointer stays put). "drag": press and drag, like a finger on the screen. */
+    static String scrollMode(Context c) { return sp(c).getString("scroll_mode", SCROLL_WHEEL); }
 
     static void scrollMode(Context c, String v) { sp(c).edit().putString("scroll_mode", v).apply(); }
 
     static boolean haptics(Context c) { return sp(c).getBoolean("haptics", true); }
 
     static void haptics(Context c, boolean v) { sp(c).edit().putBoolean("haptics", v).apply(); }
-
-    /** Dim the phone's screen while connected (it stays on, so the volume keys keep working). */
-    static boolean dim(Context c) { return sp(c).getBoolean("dim", true); }
-
-    static void dim(Context c, boolean v) { sp(c).edit().putBoolean("dim", v).apply(); }
 
     /** Back to the defaults for everything but the last device. */
     static void reset(Context c) {

@@ -26,6 +26,7 @@
     <string name="key_vol_up">音量上</string>
     <string name="key_vol_down">音量下</string>
     <string name="hint_short">%1$s</string>
+    <string name="hint_pair">%1$s：%2$s</string>
     <string name="hint_long">长按%1$s</string>
 
     <string name="act_none">不做事</string>
@@ -49,9 +50,6 @@
     <string name="scroll_note">滑动：像手指在屏幕上滑，松手有惯性。鼠标滚轮：一格一格滚，网页等部分 App 用它更好。</string>
     <string name="scroll_speed">滚动速度</string>
     <string name="haptics">点击时震动</string>
-    <string name="sec_screen">屏幕</string>
-    <string name="dim">连接时调暗屏幕</string>
-    <string name="dim_note">手机屏幕保持常亮，按键才一直有效。点顶栏可以亮几秒。</string>
     <string name="sec_other">其他</string>
     <string name="reset">恢复默认</string>
     <string name="reset_confirm">把按键映射和触控板设置恢复成默认？</string>

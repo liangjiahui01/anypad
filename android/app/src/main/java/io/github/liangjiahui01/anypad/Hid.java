@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothHidDevice;
+import android.bluetooth.BluetoothHidDeviceAppQosSettings;
 import android.bluetooth.BluetoothHidDeviceAppSdpSettings;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -12,6 +13,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +60,9 @@ final class Hid {
 
     private static final long FRAME_MS = 8; // at most ~120 mouse reports a second
     private static final long RETRY_MS = 5000;
+    // An idle Bluetooth link drops into a power-saving mode and the next movement waits for it to wake up.
+    // While the pad is on screen, an empty report this often keeps the link awake.
+    private static final long KEEPALIVE_MS = 400;
 
     private static Hid instance;
 
@@ -86,6 +91,7 @@ final class Hid {
     private long lastSent;
     private boolean recording;
     private final ArrayList<long[]> recorded = new ArrayList<>(); // {dx, dy, gap ms}
+    private long sent, failed, lastLog;
 
     private Hid(Context app) {
         this.app = app;
@@ -167,7 +173,11 @@ final class Hid {
             "Anypad", "Phone as a trackpad and remote", "Anypad", BluetoothHidDevice.SUBCLASS1_COMBO, DESCRIPTOR);
         boolean ok;
         try {
-            ok = proxy.registerApp(sdp, null, null, ioExec, callback);
+            // Low latency for what the phone sends (11.25 ms), as Bluetooth mice ask for
+            BluetoothHidDeviceAppQosSettings out = new BluetoothHidDeviceAppQosSettings(
+                BluetoothHidDeviceAppQosSettings.SERVICE_BEST_EFFORT, 800, 9, 0, 11250,
+                BluetoothHidDeviceAppQosSettings.MAX);
+            ok = proxy.registerApp(sdp, null, out, ioExec, callback);
         } catch (SecurityException e) {
             ok = false;
         }
@@ -207,7 +217,8 @@ final class Hid {
         @Override public void run() {
             if (!wantOn || proxy == null || !registered || state == CONNECTED) return;
             BluetoothDevice d = lastDevice();
-            if (d == null) return;
+            // A device that was unpaired would get a pairing request from connect(): leave it to the user
+            if (d == null || d.getBondState() != BluetoothDevice.BOND_BONDED) return;
             if (state == OFF) {
                 setState(d, CONNECTING);
                 if (!proxy.connect(d)) setState(d, OFF);
@@ -263,6 +274,26 @@ final class Hid {
 
         @Override public void onSetReport(BluetoothDevice d, byte type, byte id, byte[] data) {
             if (proxy != null) proxy.reportError(d, BluetoothHidDevice.ERROR_RSP_SUCCESS);
+        }
+    };
+
+    private boolean awake;
+
+    /** Keeps the link awake while the pad is in use (the app is in front). */
+    void keepAwake(boolean on) {
+        io.post(() -> {
+            if (on == awake) return;
+            awake = on;
+            io.removeCallbacks(keepalive);
+            if (on) io.postDelayed(keepalive, KEEPALIVE_MS);
+        });
+    }
+
+    private final Runnable keepalive = new Runnable() {
+        @Override public void run() {
+            if (!awake) return;
+            if (state == CONNECTED && SystemClock.uptimeMillis() - lastSent >= KEEPALIVE_MS) sendMouse(0, 0, 0, 0);
+            io.postDelayed(this, KEEPALIVE_MS);
         }
     };
 
@@ -364,10 +395,19 @@ final class Hid {
         BluetoothHidDevice p = proxy;
         BluetoothDevice d = device;
         if (p == null || d == null || state != CONNECTED) return;
+        boolean ok;
         try {
-            p.sendReport(d, id, data);
-        } catch (RuntimeException ignored) {
-            // Disconnected between the check and the call
+            ok = p.sendReport(d, id, data);
+        } catch (RuntimeException e) {
+            ok = false; // disconnected between the check and the call
+        }
+        sent++;
+        if (!ok) failed++;
+        if (!ok && id == ID_MOUSE) Log.w("Anypad", "mouse report failed");
+        long now = SystemClock.uptimeMillis();
+        if (now - lastLog > 1000) {
+            lastLog = now;
+            Log.i("Anypad", "reports sent " + sent + ", failed " + failed);
         }
     }
 
