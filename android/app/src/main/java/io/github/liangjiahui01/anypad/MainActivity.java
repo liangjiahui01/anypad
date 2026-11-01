@@ -118,54 +118,33 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         padLp.setMargins(dp(12), dp(12), dp(12), dp(10));
         root.addView(padBox, padLp);
 
-        // Small mouse buttons, kept for the odd right or middle click
+        // Android's navigation keys, as on older phones: Back and Home, each half the width (easy to hit blind)
         LinearLayout buttons = new LinearLayout(this);
         buttons.setPadding(dp(12), 0, dp(12), dp(12));
-        buttons.addView(mouseButton(R.string.btn_left, Hid.LEFT), weight());
+        buttons.addView(navButton(R.drawable.ic_nav_back, R.string.act_back, Action.BACK), weight());
         buttons.addView(space());
-        buttons.addView(actionButton(R.string.btn_home, Action.HOME), weight());
-        buttons.addView(space());
-        buttons.addView(mouseButton(R.string.btn_right, Hid.RIGHT), weight());
+        buttons.addView(navButton(R.drawable.ic_nav_home, R.string.act_home, Action.HOME), weight());
         root.addView(buttons);
         return root;
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private View mouseButton(int label, int button) {
-        TextView t = Ui.text(this, getString(label), 14, Palette.SUB, false);
-        t.setGravity(Gravity.CENTER);
+    private View navButton(int icon, int label, Action action) {
+        ImageView v = new ImageView(this);
+        v.setImageResource(icon);
+        v.setColorFilter(Palette.TEXT);
+        v.setScaleType(ImageView.ScaleType.CENTER);
+        v.setContentDescription(getString(label));
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Palette.KEY);
         bg.setCornerRadius(dp(12));
-        t.setBackground(bg);
-        t.setOnTouchListener((v, e) -> {
-            if (e.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                hid.press(button);
-                haptic(PadView.TAP);
-                v.setAlpha(0.6f);
-            } else if (e.getActionMasked() == MotionEvent.ACTION_UP || e.getActionMasked() == MotionEvent.ACTION_CANCEL) {
-                hid.release(button);
-                v.setAlpha(1f);
-            }
-            return true;
-        });
-        return t;
-    }
-
-    /** A bottom button that sends one action, like Home. */
-    private View actionButton(int label, Action action) {
-        TextView t = Ui.text(this, getString(label), 14, Palette.TEXT, false);
-        t.setGravity(Gravity.CENTER);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Palette.KEY);
-        bg.setCornerRadius(dp(12));
-        t.setBackground(bg);
-        t.setOnClickListener(v -> {
+        v.setBackground(new android.graphics.drawable.RippleDrawable(
+            android.content.res.ColorStateList.valueOf(0x33cdd6f4), bg, null));
+        v.setOnClickListener(x -> {
             if (hid.state() != Hid.CONNECTED) return;
             action.send(hid);
             haptic(PadView.TAP);
         });
-        return t;
+        return v;
     }
 
     private LinearLayout.LayoutParams weight() {

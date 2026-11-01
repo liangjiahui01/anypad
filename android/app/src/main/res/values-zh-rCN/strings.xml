@@ -10,9 +10,7 @@
     <string name="err_perm">Anypad 需要「附近设备」权限才能连接。</string>
 
     <string name="pad_desc">触控板。单指移动光标，轻点点击，按住后拖动选中，两指滚动，三指轻点返回。</string>
-    <string name="pad_gestures">单指：移动 · 轻点：点击
-按住再拖：选中 · 两指：滚动
-三指轻点：返回</string>
+    <string name="pad_gestures">单指：移动 · 轻点：点击\n按住再拖：选中 · 两指：滚动\n三指轻点：返回</string>
     <string name="not_connected">未连接</string>
     <string name="connecting">正在连接 %1$s…</string>
     <string name="choose_device">选择设备</string>
@@ -20,11 +18,6 @@
     <string name="pair_new">配对新设备…</string>
     <string name="pair_steps">1. 点「继续」，手机可被发现两分钟。\n2. 在平板的蓝牙设置里，配对「%1$s」。\n3. 回到这里，选中平板。\n\n平板以前通过别的 App 配对过的话，先在两边都取消配对。</string>
     <string name="pair_go">继续</string>
-
-    <string name="btn_left">左键</string>
-    <string name="btn_middle">中键</string>
-    <string name="btn_home">回桌面</string>
-    <string name="btn_right">右键</string>
 
     <string name="key_vol_up">音量上</string>
     <string name="key_vol_down">音量下</string>
