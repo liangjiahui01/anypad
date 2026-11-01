@@ -42,6 +42,7 @@ final class PadView extends View {
     private float scrollStartX, scrollStartY;
     private boolean dragging;
     private boolean wheelMode;
+    private boolean oneFinger; // one finger scrolls (reading mode)
     private float sensitivity, scrollSpeed;
 
     PadView(Context c, Hid hid, Host host) {
@@ -74,6 +75,7 @@ final class PadView extends View {
                 sensitivity = Prefs.sensitivity(getContext());
                 scrollSpeed = Prefs.scrollSpeed(getContext());
                 wheelMode = Prefs.SCROLL_WHEEL.equals(Prefs.scrollMode(getContext()));
+                oneFinger = Prefs.oneFingerScroll(getContext());
                 mode = POINT;
                 downX = lastX = x;
                 downY = lastY = y;
@@ -82,7 +84,8 @@ final class PadView extends View {
                 maxPointers = 1;
                 downs.clear();
                 downs.put(e.getPointerId(0), new float[]{x, y});
-                postDelayed(holdStart, HOLD_MS);
+                // Reading mode has no hold-to-select: a resting finger must not start a selection
+                if (!oneFinger) postDelayed(holdStart, HOLD_MS);
                 return true;
             }
             case MotionEvent.ACTION_POINTER_DOWN: {
@@ -146,6 +149,11 @@ final class PadView extends View {
             if (Math.hypot(x - downX, y - downY) < slop) return;
             moved = true;
             removeCallbacks(holdStart);
+            if (oneFinger && mode == POINT) {
+                startScroll(e);
+                scrollMove(e); // past the slop already: starts scrolling from here
+                return;
+            }
             lastX = x;
             lastY = y;
             return;
@@ -176,12 +184,12 @@ final class PadView extends View {
     }
 
     private void scrollMove(MotionEvent e) {
-        if (e.getPointerCount() < 2) return;
+        if (e.getPointerCount() < 2 && !oneFinger) return;
         float x = midX(e), y = midY(e);
         addMid(e);
         float dx = x - lastX, dy = y - lastY;
         if (!dragging) {
-            if (Math.hypot(x - scrollStartX, y - scrollStartY) < slop) return;
+            if (e.getPointerCount() > 1 && Math.hypot(x - scrollStartX, y - scrollStartY) < slop) return;
             dragging = true;
             dx = dy = 0; // start from here, so the content does not jump by the slop
             if (!wheelMode) {

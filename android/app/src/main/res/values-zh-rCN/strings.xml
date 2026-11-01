@@ -11,6 +11,9 @@
 
     <string name="pad_desc">触控板。单指移动光标，轻点点击，按住后拖动选中，两指滚动，三指轻点返回。</string>
     <string name="pad_gestures">单指：移动 · 轻点：点击\n按住再拖：选中 · 两指：滚动\n三指轻点：返回</string>
+    <string name="mode_pointer">光标</string>
+    <string name="mode_scroll">滚动</string>
+    <string name="pad_gestures_scroll">单指：滚动 · 轻点：点击\n两指：滚动\n三指轻点：返回</string>
     <string name="not_connected">未连接</string>
     <string name="connecting">正在连接 %1$s…</string>
     <string name="choose_device">选择设备</string>

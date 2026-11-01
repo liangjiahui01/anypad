@@ -64,6 +64,11 @@ final class Prefs {
 
     static void scrollMode(Context c, String v) { sp(c).edit().putString("scroll_mode", v).apply(); }
 
+    /** One finger scrolls instead of moving the pointer (reading mode), switched from the top bar. */
+    static boolean oneFingerScroll(Context c) { return sp(c).getBoolean("one_finger_scroll", false); }
+
+    static void oneFingerScroll(Context c, boolean v) { sp(c).edit().putBoolean("one_finger_scroll", v).apply(); }
+
     static boolean haptics(Context c) { return sp(c).getBoolean("haptics", true); }
 
     static void haptics(Context c, boolean v) { sp(c).edit().putBoolean("haptics", v).apply(); }

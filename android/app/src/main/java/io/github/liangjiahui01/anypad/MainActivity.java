@@ -38,6 +38,8 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
     private static final int RIGHT_BAR_DP = 56;
 
     private Hid hid;
+    private TextView modePointer, modeScroll;
+    private GradientDrawable padBg;
     private TextView chip, hint, padTitle, padSub, error;
     private Vibrator vibrator;
 
@@ -62,12 +64,24 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setBackgroundColor(Palette.BAR);
         bar.setPadding(dp(16), dp(10), dp(8), dp(10));
-        TextView name = Ui.text(this, "Anypad", 18, Palette.TEXT, true);
-        bar.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        // Pointer | Scroll: what one finger does
+        LinearLayout modes = new LinearLayout(this);
+        GradientDrawable modesBg = new GradientDrawable();
+        modesBg.setColor(Palette.KEY);
+        modesBg.setCornerRadius(dp(20));
+        modes.setBackground(modesBg);
+        modes.setPadding(dp(3), dp(3), dp(3), dp(3));
+        modePointer = modeChip(R.string.mode_pointer, false);
+        modeScroll = modeChip(R.string.mode_scroll, true);
+        modes.addView(modePointer);
+        modes.addView(modeScroll);
+        LinearLayout left = new LinearLayout(this);
+        left.addView(modes);
+        bar.addView(left, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         chip = Ui.text(this, "", 14, Palette.TEXT, false);
         chip.setSingleLine();
         chip.setEllipsize(TextUtils.TruncateAt.END);
-        chip.setMaxWidth(dp(220));
+        chip.setMaxWidth(dp(170));
         chip.setPadding(dp(14), dp(8), dp(14), dp(8));
         chip.setOnClickListener(v -> showDevices());
         bar.addView(chip);
@@ -89,7 +103,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
 
         // The pad, with a faint label in the middle and the key hints along the bottom
         FrameLayout padBox = new FrameLayout(this);
-        GradientDrawable padBg = new GradientDrawable();
+        padBg = new GradientDrawable();
         padBg.setColor(Palette.PAD);
         padBg.setCornerRadius(dp(20));
         padBox.setBackground(padBg);
@@ -185,6 +199,32 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         return v;
     }
 
+    private TextView modeChip(int label, boolean scroll) {
+        TextView t = Ui.text(this, getString(label), 14, Palette.SUB, false);
+        t.setPadding(dp(14), dp(6), dp(14), dp(6));
+        t.setOnClickListener(v -> {
+            Prefs.oneFingerScroll(this, scroll);
+            showMode();
+            haptic(PadView.TAP);
+        });
+        return t;
+    }
+
+    /** Top-bar switch, pad colour and gesture help follow the one-finger mode. */
+    private void showMode() {
+        boolean scroll = Prefs.oneFingerScroll(this);
+        for (TextView t : new TextView[]{modePointer, modeScroll}) {
+            boolean on = (t == modeScroll) == scroll;
+            GradientDrawable bg = new GradientDrawable();
+            bg.setCornerRadius(dp(17));
+            bg.setColor(on ? Palette.ACCENT : 0);
+            t.setBackground(bg);
+            t.setTextColor(on ? Palette.BG : Palette.SUB);
+        }
+        padBg.setColor(scroll ? Palette.PAD_SCROLL : Palette.PAD);
+        padSub.setText(scroll ? R.string.pad_gestures_scroll : R.string.pad_gestures);
+    }
+
     private LinearLayout.LayoutParams weight() {
         return new LinearLayout.LayoutParams(0, dp(48), 1);
     }
@@ -210,6 +250,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
     protected void onResume() {
         super.onResume();
         updateHint(); // the mapping may have changed in settings
+        showMode();
         hid.keepAwake(true);
         hid.sync(); // the connection may have changed while away
     }

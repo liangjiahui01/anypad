@@ -12,6 +12,9 @@
 
     <string name="pad_desc">Trackpad. One finger moves the pointer, tap to click, hold then drag to select, two fingers scroll, three-finger tap goes back.</string>
     <string name="pad_gestures">One finger: move · Tap: click\nHold, then drag: select · Two fingers: scroll\nThree-finger tap: back</string>
+    <string name="mode_pointer">Pointer</string>
+    <string name="mode_scroll">Scroll</string>
+    <string name="pad_gestures_scroll">One finger: scroll · Tap: click\nTwo fingers: scroll\nThree-finger tap: back</string>
     <string name="not_connected">Not connected</string>
     <string name="connecting">Connecting to %1$s…</string>
     <string name="choose_device">Choose a device</string>
