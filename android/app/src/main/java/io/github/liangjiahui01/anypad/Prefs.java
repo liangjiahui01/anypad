@@ -27,7 +27,7 @@ final class Prefs {
         }
     }
 
-    static final String SCROLL_TOUCH = "touch", SCROLL_WHEEL = "wheel";
+    static final String SCROLL_DRAG = "drag", SCROLL_WHEEL = "wheel";
 
     private static SharedPreferences sp(Context c) {
         return c.getSharedPreferences("anypad", Context.MODE_PRIVATE);
@@ -59,18 +59,10 @@ final class Prefs {
 
     static void scrollSpeed(Context c, float v) { sp(c).edit().putFloat("scroll_speed", v).apply(); }
 
-    /** "touch": a finger swipe on the other side's screen. "wheel": a mouse wheel. The pointer stays put in both. */
-    static String scrollMode(Context c) {
-        String m = sp(c).getString("scroll_mode", SCROLL_TOUCH);
-        return SCROLL_WHEEL.equals(m) ? SCROLL_WHEEL : SCROLL_TOUCH;
-    }
+    /** "wheel": a mouse wheel (the pointer stays put). "drag": press and drag, like a finger on the screen. */
+    static String scrollMode(Context c) { return sp(c).getString("scroll_mode", SCROLL_WHEEL); }
 
     static void scrollMode(Context c, String v) { sp(c).edit().putString("scroll_mode", v).apply(); }
-
-    /** Quarter turns applied to swipes, for a tablet whose screen is rotated from its natural way up. */
-    static int swipeTurns(Context c) { return sp(c).getInt("swipe_turns", 0); }
-
-    static void swipeTurns(Context c, int v) { sp(c).edit().putInt("swipe_turns", v & 3).apply(); }
 
     static boolean haptics(Context c) { return sp(c).getBoolean("haptics", true); }
 

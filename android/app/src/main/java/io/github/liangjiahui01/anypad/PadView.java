@@ -21,7 +21,7 @@ final class PadView extends View {
     private static final int IDLE = 0, POINT = 1, HELD = 2, SCROLL = 3, DONE = 4;
     private static final long TAP_MS = 250, HOLD_MS = 450;
     private static final float WHEEL_PX = 60;        // finger pixels per wheel detent, before scroll speed
-    private static final float TOUCH_GAIN = 1.0f;    // a swipe across the whole pad height crosses the whole screen
+    private static final float DRAG_GAIN = 1.4f;     // drag scrolling: tablet counts per finger pixel
     private static final float FRICTION_TAU = 0.35f; // seconds for wheel inertia to fall to 1/e
     private static final float MIN_FLING = 150;      // px/s below which inertia stops
 
@@ -38,8 +38,6 @@ final class PadView extends View {
     private float scrollStartX, scrollStartY;
     private boolean dragging;
     private boolean wheelMode;
-    private int turns;
-    private float touchX, touchY; // where the finger is on the other side's screen, 0..Hid.TOUCH_MAX
     private float sensitivity, scrollSpeed;
 
     PadView(Context c, Hid hid, Host host) {
@@ -72,7 +70,6 @@ final class PadView extends View {
                 sensitivity = Prefs.sensitivity(getContext());
                 scrollSpeed = Prefs.scrollSpeed(getContext());
                 wheelMode = Prefs.SCROLL_WHEEL.equals(Prefs.scrollMode(getContext()));
-                turns = Prefs.swipeTurns(getContext());
                 mode = POINT;
                 downX = lastX = x;
                 downY = lastY = y;
@@ -161,24 +158,14 @@ final class PadView extends View {
             dragging = true;
             dx = dy = 0; // start from here, so the content does not jump by the slop
             if (!wheelMode) {
-                // The finger lands in the middle of the other screen, wherever the pointer is
-                touchX = touchY = Hid.TOUCH_MAX / 2f;
-                hid.touch(true, (int) touchX, (int) touchY);
+                hid.record();
+                hid.press(Hid.LEFT);
             }
         }
         lastX = x;
         lastY = y;
         if (wheelMode) wheel(dx, dy);
-        else swipe(dx, dy);
-    }
-
-    private void swipe(float dx, float dy) {
-        float k = Hid.TOUCH_MAX / (float) Math.max(1, getHeight()) * TOUCH_GAIN * scrollSpeed;
-        float sx = dx * k, sy = dy * k;
-        for (int i = 0; i < turns; i++) { float t = sx; sx = -sy; sy = t; }
-        touchX = Math.max(0, Math.min(Hid.TOUCH_MAX, touchX + sx));
-        touchY = Math.max(0, Math.min(Hid.TOUCH_MAX, touchY + sy));
-        hid.touch(true, (int) touchX, (int) touchY);
+        else hid.move(dx * DRAG_GAIN * scrollSpeed, dy * DRAG_GAIN * scrollSpeed);
     }
 
     /** Fingers up = content up, as on a touch screen. */
@@ -189,8 +176,9 @@ final class PadView extends View {
 
     private void endScroll(boolean fling) {
         if (dragging && !wheelMode) {
-            // Lifting the finger ends the swipe; the other side flings by itself
-            hid.touch(false, (int) touchX, (int) touchY);
+            // The release ends the swipe; the tablet flings by itself. Then put the pointer back.
+            hid.release(Hid.LEFT);
+            hid.rewind();
         } else if (dragging && fling && vt != null) {
             vt.computeCurrentVelocity(1000);
             startFling(vt.getXVelocity(), vt.getYVelocity());

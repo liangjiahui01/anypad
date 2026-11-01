@@ -45,11 +45,9 @@
     <string name="sec_pad">触控板</string>
     <string name="sensitivity">光标速度</string>
     <string name="scroll_mode">两指滚动方式</string>
-    <string name="scroll_touch">手指滑动</string>
+    <string name="scroll_drag">滑动</string>
     <string name="scroll_wheel">鼠标滚轮</string>
-    <string name="scroll_note">手指滑动：平板屏幕中间收到一次真正的手指滑动，跟手、松手有惯性。鼠标滚轮：一格一格滚。两种都不会动光标。</string>
-    <string name="swipe_turns">滑动方向</string>
-    <string name="swipe_turns_note">平板上滑动方向偏了或反了，在这里转一下。</string>
+    <string name="scroll_note">滑动：像手指在屏幕上滑，松手有惯性。鼠标滚轮：一格一格滚，网页等部分 App 用它更好。</string>
     <string name="scroll_speed">滚动速度</string>
     <string name="haptics">点击时震动</string>
     <string name="sec_other">其他</string>

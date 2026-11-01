@@ -46,11 +46,9 @@
     <string name="sec_pad">Trackpad</string>
     <string name="sensitivity">Pointer speed</string>
     <string name="scroll_mode">Two-finger scroll</string>
-    <string name="scroll_touch">Finger swipe</string>
+    <string name="scroll_drag">Swipe</string>
     <string name="scroll_wheel">Mouse wheel</string>
-    <string name="scroll_note">Finger swipe: the tablet gets a real finger swipe in the middle of its screen, following your fingers and flinging on release. Mouse wheel: scrolls in steps. Neither moves the pointer.</string>
-    <string name="swipe_turns">Swipe direction</string>
-    <string name="swipe_turns_note">If swipes go sideways or backwards on the tablet, turn them here.</string>
+    <string name="scroll_note">Swipe moves the content like a finger on the screen and flings. Mouse wheel scrolls in steps; some apps (web pages) prefer it.</string>
     <string name="scroll_speed">Scroll speed</string>
     <string name="haptics">Vibrate on click</string>
     <string name="sec_other">Other</string>
