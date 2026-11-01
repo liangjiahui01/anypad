@@ -118,12 +118,14 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         padLp.setMargins(dp(12), dp(12), dp(12), dp(10));
         root.addView(padBox, padLp);
 
-        // Android's navigation keys, as on older phones: Back and Home, each half the width (easy to hit blind)
+        // Android's three navigation keys, as on older phones: Back, Home, Recents
         LinearLayout buttons = new LinearLayout(this);
         buttons.setPadding(dp(12), 0, dp(12), dp(12));
         buttons.addView(navButton(R.drawable.ic_nav_back, R.string.act_back, Action.BACK), weight());
         buttons.addView(space());
         buttons.addView(navButton(R.drawable.ic_nav_home, R.string.act_home, Action.HOME), weight());
+        buttons.addView(space());
+        buttons.addView(navButton(R.drawable.ic_nav_recents, R.string.act_recents, Action.RECENTS), weight());
         root.addView(buttons);
         return root;
     }
