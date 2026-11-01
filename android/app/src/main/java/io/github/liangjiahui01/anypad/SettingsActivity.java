@@ -71,6 +71,7 @@ public final class SettingsActivity extends Activity {
         toggle(R.string.haptics, Prefs.haptics(this), v -> Prefs.haptics(this, v));
 
         section(R.string.sec_other);
+        row(getString(R.string.share), null, v -> showShare());
         row(getString(R.string.reset), null, v -> new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setMessage(R.string.reset_confirm)
             .setPositiveButton(R.string.reset, (d, i) -> { Prefs.reset(this); render(); })
@@ -111,6 +112,44 @@ public final class SettingsActivity extends Activity {
                 d.dismiss();
                 render();
             })
+            .show();
+    }
+
+    /** The download link as a QR code, for another phone to scan. */
+    static final String DOWNLOAD_URL = "https://github.com/liangjiahui01/anypad/releases/latest/download/anypad.apk";
+
+    private void showShare() {
+        int px = dp(240);
+        android.graphics.Bitmap qr;
+        try {
+            java.util.Map<com.google.zxing.EncodeHintType, Object> hints = new java.util.EnumMap<>(com.google.zxing.EncodeHintType.class);
+            hints.put(com.google.zxing.EncodeHintType.MARGIN, 2);
+            com.google.zxing.common.BitMatrix m = new com.google.zxing.qrcode.QRCodeWriter()
+                .encode(DOWNLOAD_URL, com.google.zxing.BarcodeFormat.QR_CODE, px, px, hints);
+            int[] pixels = new int[px * px];
+            for (int y = 0; y < px; y++) for (int x = 0; x < px; x++) pixels[y * px + x] = m.get(x, y) ? 0xff000000 : 0xffffffff;
+            qr = android.graphics.Bitmap.createBitmap(pixels, px, px, android.graphics.Bitmap.Config.ARGB_8888);
+        } catch (com.google.zxing.WriterException e) {
+            return;
+        }
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER_HORIZONTAL);
+        box.setPadding(dp(20), dp(16), dp(20), dp(4));
+        ImageView img = new ImageView(this);
+        img.setImageBitmap(qr);
+        box.addView(img, new LinearLayout.LayoutParams(px, px));
+        TextView note = Ui.text(this, getString(R.string.share_note), 13, Palette.SUB, false);
+        note.setGravity(Gravity.CENTER);
+        note.setPadding(0, dp(12), 0, 0);
+        box.addView(note);
+        new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle(R.string.share)
+            .setView(box)
+            .setPositiveButton(R.string.share_send, (d, i) -> startActivity(android.content.Intent.createChooser(
+                new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                    .putExtra(android.content.Intent.EXTRA_TEXT, "Anypad: " + DOWNLOAD_URL), getString(R.string.share))))
+            .setNegativeButton(android.R.string.cancel, null)
             .show();
     }
 

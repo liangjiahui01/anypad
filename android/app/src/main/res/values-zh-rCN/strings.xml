@@ -54,6 +54,9 @@
     <string name="scroll_speed">滚动速度</string>
     <string name="haptics">点击时震动</string>
     <string name="sec_other">其他</string>
+    <string name="share">分享 Anypad</string>
+    <string name="share_note">用另一台手机扫码，下载最新版 Anypad（从 GitHub 下载）。</string>
+    <string name="share_send">发送链接</string>
     <string name="reset">恢复默认</string>
     <string name="reset_confirm">把按键映射和触控板设置恢复成默认？</string>
     <string name="version">版本</string>

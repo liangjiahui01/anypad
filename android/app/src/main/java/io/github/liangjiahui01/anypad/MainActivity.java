@@ -219,7 +219,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         private static final float BASE = 3f;          // detents a second while held
         private static final float RAMP_AFTER = 1f;    // seconds at reading speed before it picks up
         private static final float RAMP_TO = 4f;       // ...up to this many times faster
-        private static final float TAP_S = 0.25f, NUDGE = 1.5f; // a tap scrolls this many detents in all
+        private static final float TAP_S = 0.25f, NUDGE = 0.8f; // a tap scrolls this many detents (3-4 lines)
 
         private int dir;
         private long start, last;

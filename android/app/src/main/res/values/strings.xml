@@ -55,6 +55,9 @@
     <string name="scroll_speed">Scroll speed</string>
     <string name="haptics">Vibrate on click</string>
     <string name="sec_other">Other</string>
+    <string name="share">Share Anypad</string>
+    <string name="share_note">Scan with another phone to download the latest Anypad (from GitHub).</string>
+    <string name="share_send">Send link</string>
     <string name="reset">Restore defaults</string>
     <string name="reset_confirm">Restore the default key mapping and trackpad settings?</string>
     <string name="version">Version</string>

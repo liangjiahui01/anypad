@@ -39,7 +39,7 @@ cd android
 ./gradlew assembleRelease
 ```
 
-有 `android/keystore.properties` 时用它签名，否则用调试证书。推送 `v*` 标签时，GitHub Actions 会构建签名 APK 并附到 Release。
+有 `android/keystore.properties` 时用它签名，否则用调试证书。GitHub Actions 只做每次推送的构建检查；发版时上传用发布密钥签名的 APK，文件名 `anypad.apk`（App 里分享二维码指向的固定地址 `releases/latest/download/anypad.apk`）和 `anypad-<版本>.apk`。
 
 ## 许可
 

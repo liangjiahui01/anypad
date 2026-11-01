@@ -45,8 +45,9 @@ cd android
 ./gradlew assembleRelease
 ```
 
-Signed with `android/keystore.properties` when present, else the debug key. Tagged pushes (`v*`) build a signed
-APK on GitHub Actions and attach it to the release.
+Signed with `android/keystore.properties` when present, else the debug key. GitHub Actions builds every push;
+releases are published by uploading the APK signed with the release key, as `anypad.apk` (the stable name the
+in-app share QR code points at: `releases/latest/download/anypad.apk`) and `anypad-<version>.apk`.
 
 ## License
 
