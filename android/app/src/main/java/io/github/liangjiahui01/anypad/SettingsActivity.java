@@ -62,12 +62,12 @@ public final class SettingsActivity extends Activity {
         }
 
         section(R.string.sec_pad);
-        slider(R.string.sensitivity, 0.4f, 3f, Prefs.sensitivity(this), v -> Prefs.sensitivity(this, v));
+        slider(R.string.sensitivity, 0.1f, 3f, Prefs.sensitivity(this), v -> Prefs.sensitivity(this, v));
         String mode = Prefs.scrollMode(this);
         row(getString(R.string.scroll_mode),
             getString(Prefs.SCROLL_WHEEL.equals(mode) ? R.string.scroll_wheel : R.string.scroll_drag), v -> pickScroll());
         note(R.string.scroll_note);
-        slider(R.string.scroll_speed, 0.4f, 3f, Prefs.scrollSpeed(this), v -> Prefs.scrollSpeed(this, v));
+        slider(R.string.scroll_speed, 0.1f, 3f, Prefs.scrollSpeed(this), v -> Prefs.scrollSpeed(this, v));
         toggle(R.string.haptics, Prefs.haptics(this), v -> Prefs.haptics(this, v));
 
         section(R.string.sec_other);

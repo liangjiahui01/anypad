@@ -23,7 +23,9 @@ final class PadView extends View {
 
     private static final int IDLE = 0, POINT = 1, HELD = 2, SCROLL = 3, DONE = 4, TRIPLE = 5;
     private static final long TAP_MS = 250, HOLD_MS = 450, TRIPLE_MS = 500;
-    private static final float WHEEL_PX = 60;        // finger pixels per wheel detent, before scroll speed
+    // Finger pixels per wheel detent at 1.0x. With high-resolution wheels every 1/16 detent moves the page,
+    // so the same gesture scrolls further than with whole detents; this keeps 1.0x moderate.
+    private static final float WHEEL_PX = 150;
     private static final float DRAG_GAIN = 1.4f;     // drag scrolling: tablet counts per finger pixel
     private static final float FRICTION_TAU = 0.35f; // seconds for wheel inertia to fall to 1/e
     private static final float MIN_FLING = 150;      // px/s below which inertia stops

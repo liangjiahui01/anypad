@@ -36,8 +36,8 @@ import java.util.Set;
 public final class MainActivity extends Activity implements Hid.Listener, PadView.Host {
     private static final int REQ_PERMS = 1;
     private static final int RIGHT_BAR_DP = 56;
-    private static final float SPEED_MIN = 0.4f;
-    private static final int SPEED_STEPS = 26; // 0.4x .. 3.0x in tenths
+    private static final float SPEED_MIN = 0.1f;
+    private static final int SPEED_STEPS = 29; // 0.1x .. 3.0x in tenths
 
     private Hid hid;
     private TextView modePointer, modeScroll;
