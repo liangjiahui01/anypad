@@ -7,6 +7,9 @@ package io.github.liangjiahui01.anypad;
  */
 enum Action {
     NONE(R.string.act_none, 0),
+    // Keyboard arrows: short-video apps go to the previous / next video, documents scroll a line
+    UP(R.string.act_up, -0x52),
+    DOWN(R.string.act_down, -0x51),
     BACK(R.string.act_back, 0x0224),          // AC Back -> Android BACK
     HOME(R.string.act_home, 0x0223),          // AC Home -> Android HOME
     RECENTS(R.string.act_recents, 0x029F),    // AC Desktop Show All Windows -> Android RECENT_APPS
@@ -18,7 +21,7 @@ enum Action {
     MUTE(R.string.act_mute, 0x00E2);
 
     final int label;
-    private final int androidUsage;
+    private final int androidUsage; // consumer usage; negative = keyboard usage
 
     Action(int label, int androidUsage) {
         this.label = label;
@@ -26,7 +29,9 @@ enum Action {
     }
 
     void send(Hid hid) {
-        if (this != NONE) hid.consumer(androidUsage);
+        if (this == NONE) return;
+        if (androidUsage < 0) hid.key(0, -androidUsage);
+        else hid.consumer(androidUsage);
     }
 
     static Action parse(String name, Action fallback) {

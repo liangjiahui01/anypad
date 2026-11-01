@@ -9,9 +9,9 @@ final class Prefs {
 
     /** The phone's keys that can be mapped, each with a short and a long press. */
     enum Key {
-        VOL_UP_SHORT("vol_up_short", R.string.key_vol_up, false, Action.PLAY_PAUSE),
-        VOL_UP_LONG("vol_up_long", R.string.key_vol_up, true, Action.HOME),
-        VOL_DOWN_SHORT("vol_down_short", R.string.key_vol_down, false, Action.BACK),
+        VOL_UP_SHORT("vol_up_short", R.string.key_vol_up, false, Action.UP),
+        VOL_UP_LONG("vol_up_long", R.string.key_vol_up, true, Action.NONE),
+        VOL_DOWN_SHORT("vol_down_short", R.string.key_vol_down, false, Action.DOWN),
         VOL_DOWN_LONG("vol_down_long", R.string.key_vol_down, true, Action.NONE);
 
         final String pref;

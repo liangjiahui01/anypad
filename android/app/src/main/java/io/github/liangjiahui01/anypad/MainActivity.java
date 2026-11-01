@@ -321,8 +321,13 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         if (shortKey(code) == null || hid.state() != Hid.CONNECTED) return super.onKeyDown(code, e);
         if (e.getRepeatCount() == 0) {
             longFired = false;
-            // Long presses are only told apart when one is mapped, so a short press is not delayed for nothing
+            // Long presses are only told apart when one is mapped. Without one, act on the press itself:
+            // no waiting for the release.
             if (Prefs.action(this, longKey(code)) != Action.NONE) e.startTracking();
+            else {
+                longFired = true; // nothing left to do on release
+                fire(shortKey(code));
+            }
         }
         return true;
     }
@@ -340,13 +345,15 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
     public boolean onKeyUp(int code, KeyEvent e) {
         Prefs.Key k = shortKey(code);
         if (k == null || hid.state() != Hid.CONNECTED) return super.onKeyUp(code, e);
-        if (!longFired && !e.isCanceled()) {
-            Action a = Prefs.action(this, k);
-            a.send(hid);
-            if (a != Action.NONE) haptic(PadView.TAP);
-        }
+        if (!longFired && !e.isCanceled()) fire(k);
         longFired = false;
         return true;
+    }
+
+    private void fire(Prefs.Key k) {
+        Action a = Prefs.action(this, k);
+        a.send(hid);
+        if (a != Action.NONE) haptic(PadView.TAP);
     }
 
     private void updateHint() {
@@ -358,6 +365,8 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
             String key = getString(k.longPress ? R.string.hint_long : R.string.hint_short, getString(k.label));
             s.append(getString(R.string.hint_pair, key, getString(a.label)));
         }
+        if (s.length() > 0) s.append("  ·  ");
+        s.append(getString(R.string.hint_three_back));
         hint.setText(s);
     }
 
@@ -366,6 +375,11 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
     private void screenState() {
         if (hid.state() == Hid.CONNECTED) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    public void onThreeFingerTap() {
+        if (hid.state() == Hid.CONNECTED) Action.BACK.send(hid);
     }
 
     // ---- feedback --------------------------------------------------------------------------------------------------

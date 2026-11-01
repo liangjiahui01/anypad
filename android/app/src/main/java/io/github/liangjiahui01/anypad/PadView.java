@@ -14,12 +14,15 @@ import android.view.ViewConfiguration;
 final class PadView extends View {
     interface Host {
         void haptic(int kind);
+
+        /** Three fingers tapped together. */
+        void onThreeFingerTap();
     }
 
     static final int TAP = 0, HOLD = 1;
 
-    private static final int IDLE = 0, POINT = 1, HELD = 2, SCROLL = 3, DONE = 4;
-    private static final long TAP_MS = 250, HOLD_MS = 450;
+    private static final int IDLE = 0, POINT = 1, HELD = 2, SCROLL = 3, DONE = 4, TRIPLE = 5;
+    private static final long TAP_MS = 250, HOLD_MS = 450, TRIPLE_MS = 500;
     private static final float WHEEL_PX = 60;        // finger pixels per wheel detent, before scroll speed
     private static final float DRAG_GAIN = 1.4f;     // drag scrolling: tablet counts per finger pixel
     private static final float FRICTION_TAU = 0.35f; // seconds for wheel inertia to fall to 1/e
@@ -34,6 +37,7 @@ final class PadView extends View {
     private long downAt;
     private boolean moved;
     private int maxPointers;
+    private final android.util.SparseArray<float[]> downs = new android.util.SparseArray<>(); // pointer id -> where it landed
     private VelocityTracker vt;
     private float scrollStartX, scrollStartY;
     private boolean dragging;
@@ -76,14 +80,22 @@ final class PadView extends View {
                 downAt = e.getEventTime();
                 moved = false;
                 maxPointers = 1;
+                downs.clear();
+                downs.put(e.getPointerId(0), new float[]{x, y});
                 postDelayed(holdStart, HOLD_MS);
                 return true;
             }
             case MotionEvent.ACTION_POINTER_DOWN: {
                 maxPointers = Math.max(maxPointers, e.getPointerCount());
                 removeCallbacks(holdStart);
+                int i = e.getActionIndex();
+                downs.put(e.getPointerId(i), new float[]{e.getX(i), e.getY(i)});
                 if (mode == POINT && e.getPointerCount() == 2) startScroll(e);
-                else if (mode == SCROLL) { // a third finger: end the scroll, ignore the rest
+                else if (mode == SCROLL && e.getPointerCount() == 3 && !dragging) {
+                    // Three fingers that landed together and have not scrolled: maybe a three-finger tap
+                    endScroll(false);
+                    mode = TRIPLE;
+                } else if (mode == SCROLL || mode == TRIPLE) { // a scroll that grew a finger, or a fourth finger
                     endScroll(false);
                     mode = DONE;
                 }
@@ -92,8 +104,10 @@ final class PadView extends View {
             case MotionEvent.ACTION_MOVE:
                 if (mode == POINT || mode == HELD) point(e);
                 else if (mode == SCROLL) scrollMove(e);
+                else if (mode == TRIPLE && fingersMoved(e)) mode = DONE;
                 return true;
             case MotionEvent.ACTION_POINTER_UP:
+                if (mode == TRIPLE) return true; // fingers lifting one by one ends the tap; judged on the last
                 if (mode == SCROLL) {
                     endScroll(true);
                     mode = DONE;
@@ -104,6 +118,11 @@ final class PadView extends View {
                 if (mode == POINT && !moved && maxPointers == 1 && e.getEventTime() - downAt < TAP_MS) {
                     hid.click(Hid.LEFT);
                     host.haptic(TAP);
+                } else if (mode == TRIPLE) {
+                    if (e.getEventTime() - downAt < TRIPLE_MS && !fingersMoved(e)) {
+                        host.onThreeFingerTap();
+                        host.haptic(TAP);
+                    }
                 } else if (mode == HELD) {
                     hid.release(Hid.LEFT);
                 } else if (mode == SCROLL) {
@@ -134,6 +153,14 @@ final class PadView extends View {
         hid.move((x - lastX) * sensitivity, (y - lastY) * sensitivity);
         lastX = x;
         lastY = y;
+    }
+
+    private boolean fingersMoved(MotionEvent e) {
+        for (int i = 0; i < e.getPointerCount(); i++) {
+            float[] d = downs.get(e.getPointerId(i));
+            if (d != null && Math.hypot(e.getX(i) - d[0], e.getY(i) - d[1]) > slop) return true;
+        }
+        return false;
     }
 
     // ---- two-finger scrolling -------------------------------------------------------------------------------------
