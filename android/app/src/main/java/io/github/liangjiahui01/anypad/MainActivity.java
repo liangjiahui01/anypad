@@ -36,9 +36,13 @@ import java.util.Set;
 public final class MainActivity extends Activity implements Hid.Listener, PadView.Host {
     private static final int REQ_PERMS = 1;
     private static final int RIGHT_BAR_DP = 56;
+    private static final float SPEED_MIN = 0.4f;
+    private static final int SPEED_STEPS = 26; // 0.4x .. 3.0x in tenths
 
     private Hid hid;
-    private TextView modePointer, modeScroll;
+    private TextView modePointer, modeScroll, speedLabel, speedValue;
+    private android.widget.SeekBar speed;
+    private View pad, rightBar, padLabel;
     private GradientDrawable padBg;
     private TextView chip, hint, padTitle, padSub, error;
     private Vibrator vibrator;
@@ -95,6 +99,38 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         bar.addView(gear, new LinearLayout.LayoutParams(dp(44), dp(44)));
         root.addView(bar);
 
+        // Speed slider for the current mode, to tune while trying it out
+        LinearLayout speedRow = new LinearLayout(this);
+        speedRow.setGravity(Gravity.CENTER_VERTICAL);
+        speedRow.setBackgroundColor(Palette.BAR);
+        speedRow.setPadding(dp(16), 0, dp(16), dp(6));
+        speedLabel = Ui.text(this, "", 13, Palette.SUB, false);
+        speedRow.addView(speedLabel);
+        speed = new android.widget.SeekBar(this);
+        speed.setMax(SPEED_STEPS);
+        android.content.res.ColorStateList accent = android.content.res.ColorStateList.valueOf(Palette.ACCENT);
+        speed.setProgressTintList(accent);
+        speed.setThumbTintList(accent);
+        speed.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(android.widget.SeekBar s, int p, boolean user) {
+                float v = SPEED_MIN + p / 10f;
+                speedValue.setText(String.format(java.util.Locale.ROOT, "%.1f×", v));
+                if (!user) return;
+                if (Prefs.oneFingerScroll(MainActivity.this)) Prefs.scrollSpeed(MainActivity.this, v);
+                else Prefs.sensitivity(MainActivity.this, v);
+            }
+
+            @Override public void onStartTrackingTouch(android.widget.SeekBar s) { }
+
+            @Override public void onStopTrackingTouch(android.widget.SeekBar s) { }
+        });
+        speedRow.addView(speed, new LinearLayout.LayoutParams(0, dp(40), 1));
+        speedValue = Ui.text(this, "", 13, Palette.TEXT, false);
+        speedValue.setMinWidth(dp(40));
+        speedValue.setGravity(Gravity.END);
+        speedRow.addView(speedValue);
+        root.addView(speedRow);
+
         error = Ui.text(this, "", 14, Palette.AMBER, false);
         error.setPadding(dp(16), dp(10), dp(16), dp(10));
         error.setBackgroundColor(Palette.AMBER_BG);
@@ -107,12 +143,13 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         padBg.setColor(Palette.PAD);
         padBg.setCornerRadius(dp(20));
         padBox.setBackground(padBg);
-        PadView pad = new PadView(this, hid, this);
+        pad = new PadView(this, hid, this);
         pad.setContentDescription(getString(R.string.pad_desc));
         FrameLayout.LayoutParams padLpInner = new FrameLayout.LayoutParams(-1, -1);
         padLpInner.rightMargin = dp(RIGHT_BAR_DP);
         padBox.addView(pad, padLpInner);
-        padBox.addView(rightBar(), new FrameLayout.LayoutParams(dp(RIGHT_BAR_DP), -1, Gravity.END));
+        rightBar = rightBar();
+        padBox.addView(rightBar, new FrameLayout.LayoutParams(dp(RIGHT_BAR_DP), -1, Gravity.END));
 
         LinearLayout label = new LinearLayout(this);
         label.setOrientation(LinearLayout.VERTICAL);
@@ -128,6 +165,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         FrameLayout.LayoutParams labelLp = new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER);
         labelLp.rightMargin = dp(RIGHT_BAR_DP); // centred on the trackpad, clear of the right-click strip
         padBox.addView(label, labelLp);
+        padLabel = label;
 
         hint = Ui.text(this, "", 13, Palette.SUB, false);
         hint.setGravity(Gravity.CENTER);
@@ -223,6 +261,21 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         }
         padBg.setColor(scroll ? Palette.PAD_SCROLL : Palette.PAD);
         padSub.setText(scroll ? R.string.pad_gestures_scroll : R.string.pad_gestures);
+
+        // The slider tunes what one finger does now
+        speedLabel.setText(scroll ? R.string.scroll_speed : R.string.sensitivity);
+        float v = scroll ? Prefs.scrollSpeed(this) : Prefs.sensitivity(this);
+        speed.setProgress(Math.round((v - SPEED_MIN) * 10));
+        speedValue.setText(String.format(java.util.Locale.ROOT, "%.1f×", v));
+
+        // Right click only matters with a pointer; in Scroll mode the pad takes the full width
+        rightBar.setVisibility(scroll ? View.GONE : View.VISIBLE);
+        int margin = scroll ? 0 : dp(RIGHT_BAR_DP);
+        for (View w : new View[]{pad, padLabel, hint}) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) w.getLayoutParams();
+            lp.rightMargin = margin;
+            w.setLayoutParams(lp);
+        }
     }
 
     private LinearLayout.LayoutParams weight() {
