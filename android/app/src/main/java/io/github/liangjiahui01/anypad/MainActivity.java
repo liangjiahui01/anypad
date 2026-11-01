@@ -377,6 +377,18 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
+    /**
+     * The phone's own Back (edge swipe or button) goes to the other side while connected, instead of closing
+     * Anypad. Leave the app with the Home gesture.
+     */
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {
+        if (hid.state() != Hid.CONNECTED) { super.onBackPressed(); return; }
+        Action.BACK.send(hid);
+        haptic(PadView.TAP);
+    }
+
     @Override
     public void onThreeFingerTap() {
         if (hid.state() == Hid.CONNECTED) Action.BACK.send(hid);

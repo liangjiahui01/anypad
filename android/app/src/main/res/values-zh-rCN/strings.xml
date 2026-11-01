@@ -29,7 +29,7 @@
     <string name="key_vol_down">音量下</string>
     <string name="hint_short">%1$s</string>
     <string name="hint_pair">%1$s：%2$s</string>
-    <string name="hint_three_back">三指轻点：返回</string>
+    <string name="hint_three_back">侧滑或三指轻点：返回</string>
     <string name="hint_long">长按%1$s</string>
 
     <string name="act_none">不做事</string>

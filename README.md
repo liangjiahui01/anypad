@@ -9,10 +9,13 @@ Anypad is made for use **without looking at the phone**, for example lying in be
   - One finger moves the pointer, a tap clicks.
   - Press and hold, then drag, to select or drag.
   - Two fingers anywhere scroll: as a finger swipe (with fling) or as a mouse wheel.
-- The volume keys do the common actions, with no button to find: by default
-  volume down is **Back**, volume up is **play / pause**, holding volume up goes **Home**.
-  Every key's short and long press can be remapped in Settings.
-- A vibration confirms each click; the phone's screen stays on, dimmed, while connected.
+  - Three fingers tapped together go **Back**.
+- The phone's own Back gesture (swipe in from a side edge) goes **Back** on the other side instead of closing
+  Anypad; leave the app with the Home gesture.
+- The volume keys need no button to find: by default volume up / down are the **up / down arrow keys**, which
+  switch to the previous / next video in short-video apps. Every key's short and long press can be remapped
+  in Settings.
+- A vibration confirms each click; the phone's screen stays on while connected.
 
 [中文说明](README.zh-CN.md)
 
