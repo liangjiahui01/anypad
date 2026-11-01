@@ -10,7 +10,8 @@ Anypad is made for use **without looking at the phone**, for example lying in be
   - Press and hold, then drag, to select or drag.
   - Two fingers anywhere scroll: as a finger swipe (with fling) or as a mouse wheel.
   - Three fingers tapped together go **Back**.
-  - A tall strip along the right side is the **right click** (text menus on a selection).
+  - A tall strip along the right side scrolls while held: upper half up, lower half down, at an even pace
+    that picks up after a second (Pointer mode).
 - Android's three navigation keys sit along the bottom: **Back, Home, Recent apps**.
 - The volume keys need no button to find: by default volume up / down are the **up / down arrow keys**, which
   switch to the previous / next video in short-video apps. Every key's short and long press can be remapped

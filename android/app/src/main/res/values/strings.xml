@@ -22,8 +22,8 @@
     <string name="pair_new">Pair a new device…</string>
     <string name="pair_steps">1. Tap Continue to make this phone visible for two minutes.\n2. On the tablet, open Bluetooth settings and pair with \"%1$s\".\n3. Come back here and choose the tablet.\n\nIf the tablet was paired before through another app, forget it on both sides first.</string>
     <string name="pair_go">Continue</string>
-
-    <string name="right_click">Right click</string>
+    <string name="hold_up">Scroll up (hold to keep going)</string>
+    <string name="hold_down">Scroll down (hold to keep going)</string>
     <string name="key_vol_up">Volume up</string>
     <string name="key_vol_down">Volume down</string>
     <string name="hint_short">%1$s</string>

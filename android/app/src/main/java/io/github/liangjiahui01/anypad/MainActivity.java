@@ -122,7 +122,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         FrameLayout.LayoutParams padLpInner = new FrameLayout.LayoutParams(-1, -1);
         padLpInner.rightMargin = dp(RIGHT_BAR_DP);
         padBox.addView(pad, padLpInner);
-        rightBar = rightBar();
+        rightBar = scrollStrip();
         padBox.addView(rightBar, new FrameLayout.LayoutParams(dp(RIGHT_BAR_DP), -1, Gravity.END));
 
         LinearLayout label = new LinearLayout(this);
@@ -137,7 +137,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         label.addView(padTitle);
         label.addView(padSub);
         FrameLayout.LayoutParams labelLp = new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER);
-        labelLp.rightMargin = dp(RIGHT_BAR_DP); // centred on the trackpad, clear of the right-click strip
+        labelLp.rightMargin = dp(RIGHT_BAR_DP); // centred on the trackpad, clear of the scroll strip
         padBox.addView(label, labelLp);
         padLabel = label;
 
@@ -164,33 +164,101 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         return root;
     }
 
-    /** A tall strip along the pad's right side: tap for a right click (text menus on a selection). */
+    /**
+     * A tall strip along the pad's right side for reading: hold the upper half to scroll up, the lower half to
+     * scroll down, at an even speed that picks up after a second; a tap nudges a few lines. Smooth because the
+     * wheel is high-resolution and the scroll goes out a little every frame.
+     */
     @SuppressLint("ClickableViewAccessibility")
-    private View rightBar() {
-        TextView t = Ui.text(this, getString(R.string.right_click), 13, Palette.FAINT, false);
-        t.setGravity(Gravity.CENTER);
-        t.setRotation(0);
-        t.setEms(1); // one character a line: the label reads top to bottom
+    private View scrollStrip() {
+        LinearLayout strip = new LinearLayout(this);
+        strip.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Palette.KEY);
         bg.setCornerRadii(new float[]{0, 0, dp(20), dp(20), dp(20), dp(20), 0, 0});
-        t.setBackground(bg);
-        t.setContentDescription(getString(R.string.right_click));
-        t.setOnTouchListener((v, e) -> {
-            if (e.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                if (hid.state() == Hid.CONNECTED) {
-                    hid.press(Hid.RIGHT);
-                    haptic(PadView.TAP);
+        strip.setBackground(bg);
+        TextView up = Ui.text(this, "▲", 14, Palette.FAINT, false);
+        TextView down = Ui.text(this, "▼", 14, Palette.FAINT, false);
+        up.setGravity(Gravity.CENTER);
+        down.setGravity(Gravity.CENTER);
+        up.setContentDescription(getString(R.string.hold_up));
+        down.setContentDescription(getString(R.string.hold_down));
+        View line = new View(this);
+        line.setBackgroundColor(Palette.LINE);
+        strip.addView(up, new LinearLayout.LayoutParams(-1, 0, 1));
+        LinearLayout.LayoutParams lineLp = new LinearLayout.LayoutParams(-1, dp(1));
+        lineLp.setMargins(dp(12), 0, dp(12), 0);
+        strip.addView(line, lineLp);
+        strip.addView(down, new LinearLayout.LayoutParams(-1, 0, 1));
+        strip.setOnTouchListener((v, e) -> {
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN: {
+                    boolean isUp = e.getY() < v.getHeight() / 2f;
+                    (isUp ? up : down).setTextColor(Palette.ACCENT);
+                    if (hid.state() == Hid.CONNECTED) {
+                        haptic(PadView.TAP);
+                        holdScroll.start(isUp ? 1 : -1);
+                    }
+                    return true;
                 }
-                v.setAlpha(0.6f);
-            } else if (e.getActionMasked() == MotionEvent.ACTION_UP || e.getActionMasked() == MotionEvent.ACTION_CANCEL) {
-                hid.release(Hid.RIGHT);
-                v.setAlpha(1f);
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    up.setTextColor(Palette.FAINT);
+                    down.setTextColor(Palette.FAINT);
+                    holdScroll.stop();
+                    return true;
             }
             return true;
         });
-        return t;
+        return strip;
     }
+
+    /** The scrolling behind the strip: runs every frame while held. */
+    private final class HoldScroll implements Runnable {
+        // Its own speed, apart from the finger scroll speed (which is usually turned well down)
+        private static final float BASE = 3f;          // detents a second while held
+        private static final float RAMP_AFTER = 1f;    // seconds at reading speed before it picks up
+        private static final float RAMP_TO = 4f;       // ...up to this many times faster
+        private static final float TAP_S = 0.25f, NUDGE = 1.5f; // a tap scrolls this many detents in all
+
+        private int dir;
+        private long start, last;
+        private float done; // detents sent since the press
+        private boolean held, running;
+
+        void start(int dir) {
+            this.dir = dir;
+            start = last = System.nanoTime();
+            done = 0;
+            held = true;
+            if (!running) { running = true; chip.postOnAnimation(this); }
+        }
+
+        void stop() {
+            held = false; // a short tap keeps going until it has nudged NUDGE detents
+        }
+
+        @Override public void run() {
+            long now = System.nanoTime();
+            float t = (now - start) / 1e9f, dt = Math.min(0.05f, (now - last) / 1e9f);
+            last = now;
+            float rate = BASE;
+            if (t > RAMP_AFTER) rate *= Math.min(RAMP_TO, 1 + (t - RAMP_AFTER) * 1.5f);
+            float step;
+            if (held) {
+                step = rate * dt;
+            } else {
+                float nudge = NUDGE;
+                if (t > TAP_S || done >= nudge) { running = false; return; }
+                step = Math.min(nudge - done, rate * 3 * dt);
+            }
+            done += step;
+            hid.scroll(dir * step, 0);
+            chip.postOnAnimation(this);
+        }
+    }
+
+    private final HoldScroll holdScroll = new HoldScroll();
 
     private View navButton(int icon, int label, Action action) {
         ImageView v = new ImageView(this);
@@ -282,7 +350,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         ((Runnable) pointerRow.getTag()).run();
         ((Runnable) scrollRow.getTag()).run();
 
-        // Right click only matters with a pointer; in Scroll mode the pad takes the full width
+        // The hold-to-scroll strip is for Pointer mode; in Scroll mode the pad takes the full width
         rightBar.setVisibility(scroll ? View.GONE : View.VISIBLE);
         int margin = scroll ? 0 : dp(RIGHT_BAR_DP);
         for (View w : new View[]{pad, padLabel, hint}) {
