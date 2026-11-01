@@ -123,7 +123,7 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         buttons.setPadding(dp(12), 0, dp(12), dp(12));
         buttons.addView(mouseButton(R.string.btn_left, Hid.LEFT), weight());
         buttons.addView(space());
-        buttons.addView(mouseButton(R.string.btn_middle, Hid.MIDDLE), weight());
+        buttons.addView(actionButton(R.string.btn_home, Action.HOME), weight());
         buttons.addView(space());
         buttons.addView(mouseButton(R.string.btn_right, Hid.RIGHT), weight());
         root.addView(buttons);
@@ -148,6 +148,22 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
                 v.setAlpha(1f);
             }
             return true;
+        });
+        return t;
+    }
+
+    /** A bottom button that sends one action, like Home. */
+    private View actionButton(int label, Action action) {
+        TextView t = Ui.text(this, getString(label), 14, Palette.TEXT, false);
+        t.setGravity(Gravity.CENTER);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Palette.KEY);
+        bg.setCornerRadius(dp(12));
+        t.setBackground(bg);
+        t.setOnClickListener(v -> {
+            if (hid.state() != Hid.CONNECTED) return;
+            action.send(hid);
+            haptic(PadView.TAP);
         });
         return t;
     }

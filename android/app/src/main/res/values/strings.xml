@@ -24,6 +24,7 @@ Three-finger tap: back</string>
 
     <string name="btn_left">Left</string>
     <string name="btn_middle">Middle</string>
+    <string name="btn_home">Home</string>
     <string name="btn_right">Right</string>
 
     <string name="key_vol_up">Volume up</string>

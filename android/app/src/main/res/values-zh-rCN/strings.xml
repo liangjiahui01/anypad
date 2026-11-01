@@ -23,6 +23,7 @@
 
     <string name="btn_left">左键</string>
     <string name="btn_middle">中键</string>
+    <string name="btn_home">回桌面</string>
     <string name="btn_right">右键</string>
 
     <string name="key_vol_up">音量上</string>
