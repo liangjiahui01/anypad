@@ -359,6 +359,11 @@ final class Hid {
         io.post(() -> { accWheel += wheel * WHEEL_RES; accPan += pan * WHEEL_RES; queueFlush(); });
     }
 
+    /** Scrolls by raw wheel counts: the smallest step the other side takes (one detent on this tablet). */
+    void wheelCounts(float counts) {
+        io.post(() -> { accWheel += counts; queueFlush(); });
+    }
+
     void press(int button) {
         io.post(() -> { flush(); buttons |= button; sendMouse(0, 0, 0, 0); });
     }

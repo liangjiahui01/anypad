@@ -213,47 +213,48 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         return strip;
     }
 
-    /** The scrolling behind the strip: runs every frame while held. */
+    /**
+     * The scrolling behind the strip, like a held arrow key: a tap scrolls one wheel count (the smallest step the
+     * tablet takes), holding repeats at an even pace. The tablet ignores the high-resolution multiplier, so a count
+     * is a whole detent there.
+     */
     private final class HoldScroll implements Runnable {
-        // Its own speed, apart from the finger scroll speed (which is usually turned well down)
-        private static final float BASE = 3f;          // detents a second while held
-        private static final float RAMP_AFTER = 1f;    // seconds at reading speed before it picks up
-        private static final float RAMP_TO = 4f;       // ...up to this many times faster
-        private static final float TAP_S = 0.25f, NUDGE = 0.8f; // a tap scrolls this many detents (3-4 lines)
+        private static final long REPEAT_AFTER_MS = 350; // a held press starts repeating after this
+        private static final float RATE = 6f;            // counts a second while repeating
 
         private int dir;
-        private long start, last;
-        private float done; // detents sent since the press
-        private boolean held, running;
+        private long last;
+        private float acc;
+        private boolean held;
 
         void start(int dir) {
             this.dir = dir;
-            start = last = System.nanoTime();
-            done = 0;
             held = true;
-            if (!running) { running = true; chip.postOnAnimation(this); }
+            hid.wheelCounts(dir); // one step right away
+            chip.removeCallbacks(this);
+            chip.postDelayed(() -> {
+                if (!held) return;
+                last = System.nanoTime();
+                acc = 0;
+                chip.postOnAnimation(this);
+            }, REPEAT_AFTER_MS);
         }
 
         void stop() {
-            held = false; // a short tap keeps going until it has nudged NUDGE detents
+            held = false;
+            chip.removeCallbacks(this);
         }
 
         @Override public void run() {
+            if (!held) return;
             long now = System.nanoTime();
-            float t = (now - start) / 1e9f, dt = Math.min(0.05f, (now - last) / 1e9f);
+            acc += RATE * Math.min(0.05f, (now - last) / 1e9f);
             last = now;
-            float rate = BASE;
-            if (t > RAMP_AFTER) rate *= Math.min(RAMP_TO, 1 + (t - RAMP_AFTER) * 1.5f);
-            float step;
-            if (held) {
-                step = rate * dt;
-            } else {
-                float nudge = NUDGE;
-                if (t > TAP_S || done >= nudge) { running = false; return; }
-                step = Math.min(nudge - done, rate * 3 * dt);
+            int n = (int) acc;
+            if (n != 0) {
+                acc -= n;
+                hid.wheelCounts(dir * n);
             }
-            done += step;
-            hid.scroll(dir * step, 0);
             chip.postOnAnimation(this);
         }
     }
