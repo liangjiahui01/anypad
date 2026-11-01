@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Anypad</string>
+    <string name="settings">Settings</string>
+    <string name="back">Back</string>
+
+    <string name="err_no_bt">This phone has no Bluetooth.</string>
+    <string name="err_bt_off">Bluetooth is off. Turn it on, then come back.</string>
+    <string name="err_no_hid">This phone cannot act as a Bluetooth mouse.</string>
+    <string name="err_register">Another app is using the phone as a Bluetooth mouse or keyboard. Close it (or disconnect it there), then reopen Anypad.</string>
+    <string name="err_perm">Anypad needs the Nearby devices permission to connect.</string>
+
+    <string name="pad_desc">Trackpad. One finger moves the pointer, tap to click, hold then drag to select, two fingers scroll.</string>
+    <string name="pad_gestures">One finger: move · Tap: click\nHold, then drag: select · Two fingers: scroll</string>
+    <string name="not_connected">Not connected</string>
+    <string name="connecting">Connecting to %1$s…</string>
+    <string name="choose_device">Choose a device</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="pair_new">Pair a new device…</string>
+    <string name="pair_steps">1. Tap Continue to make this phone visible for two minutes.\n2. On the tablet, open Bluetooth settings and pair with \"%1$s\".\n3. Come back here and choose the tablet.\n\nIf the tablet was paired before through another app, forget it on both sides first.</string>
+    <string name="pair_go">Continue</string>
+
+    <string name="btn_left">Left</string>
+    <string name="btn_middle">Middle</string>
+    <string name="btn_right">Right</string>
+
+    <string name="key_vol_up">Volume up</string>
+    <string name="key_vol_down">Volume down</string>
+    <string name="hint_short">%1$s</string>
+    <string name="hint_long">Hold %1$s</string>
+
+    <string name="act_none">Nothing</string>
+    <string name="act_back">Back</string>
+    <string name="act_home">Home</string>
+    <string name="act_recents">Recent apps</string>
+    <string name="act_play_pause">Play / pause</string>
+    <string name="act_next">Next track</string>
+    <string name="act_prev">Previous track</string>
+    <string name="act_vol_up">Volume up</string>
+    <string name="act_vol_down">Volume down</string>
+    <string name="act_mute">Mute</string>
+
+    <string name="sec_keys">Phone keys</string>
+    <string name="keys_note">Work while Anypad is open and connected. Otherwise the keys change the phone\'s volume as usual.</string>
+    <string name="sec_pad">Trackpad</string>
+    <string name="sensitivity">Pointer speed</string>
+    <string name="scroll_mode">Two-finger scroll</string>
+    <string name="scroll_drag">Swipe</string>
+    <string name="scroll_wheel">Mouse wheel</string>
+    <string name="scroll_note">Swipe moves the content like a finger on the screen and flings. Mouse wheel scrolls in steps; some apps (web pages) prefer it.</string>
+    <string name="scroll_speed">Scroll speed</string>
+    <string name="haptics">Vibrate on click</string>
+    <string name="sec_screen">Screen</string>
+    <string name="dim">Dim while connected</string>
+    <string name="dim_note">The phone screen stays on so the keys keep working. Touch the top bar to brighten it for a few seconds.</string>
+    <string name="sec_other">Other</string>
+    <string name="reset">Restore defaults</string>
+    <string name="reset_confirm">Restore the default key mapping and trackpad settings?</string>
+    <string name="version">Version</string>
+</resources>

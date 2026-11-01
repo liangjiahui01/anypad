@@ -1,0 +1,48 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "io.github.liangjiahui01.anypad"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "io.github.liangjiahui01.anypad"
+        // BluetoothHidDevice (the phone acting as a mouse and keyboard) arrived in Android 9
+        minSdk 28
+        targetSdk 34
+        versionCode 1
+        versionName "0.1.0"
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            def kp = new Properties()
+            def kf = rootProject.file("keystore.properties")
+            if (kf.exists()) {
+                kf.withInputStream { kp.load(it) }
+                storeFile rootProject.file(kp.getProperty("storeFile"))
+                storePassword kp.getProperty("storePassword")
+                keyAlias kp.getProperty("keyAlias")
+                keyPassword kp.getProperty("keyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Signed with a release keystore when keystore.properties exists, else the debug key
+            signingConfig rootProject.file("keystore.properties").exists() ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

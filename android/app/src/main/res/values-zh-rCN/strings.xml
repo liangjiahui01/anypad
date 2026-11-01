@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">设置</string>
+    <string name="back">返回</string>
+
+    <string name="err_no_bt">这台手机没有蓝牙。</string>
+    <string name="err_bt_off">蓝牙没开。打开后再回来。</string>
+    <string name="err_no_hid">这台手机不支持当蓝牙鼠标用。</string>
+    <string name="err_register">另一个 App 正把手机当蓝牙鼠标或键盘用。先关掉它（或在里面断开），再重新打开 Anypad。</string>
+    <string name="err_perm">Anypad 需要「附近设备」权限才能连接。</string>
+
+    <string name="pad_desc">触控板。单指移动光标，轻点点击，按住后拖动选中，两指滚动。</string>
+    <string name="pad_gestures">单指：移动 · 轻点：点击\n按住再拖：选中 · 两指：滚动</string>
+    <string name="not_connected">未连接</string>
+    <string name="connecting">正在连接 %1$s…</string>
+    <string name="choose_device">选择设备</string>
+    <string name="disconnect">断开</string>
+    <string name="pair_new">配对新设备…</string>
+    <string name="pair_steps">1. 点「继续」，手机可被发现两分钟。\n2. 在平板的蓝牙设置里，配对「%1$s」。\n3. 回到这里，选中平板。\n\n平板以前通过别的 App 配对过的话，先在两边都取消配对。</string>
+    <string name="pair_go">继续</string>
+
+    <string name="btn_left">左键</string>
+    <string name="btn_middle">中键</string>
+    <string name="btn_right">右键</string>
+
+    <string name="key_vol_up">音量上</string>
+    <string name="key_vol_down">音量下</string>
+    <string name="hint_short">%1$s</string>
+    <string name="hint_long">长按%1$s</string>
+
+    <string name="act_none">不做事</string>
+    <string name="act_back">返回</string>
+    <string name="act_home">回桌面</string>
+    <string name="act_recents">最近任务</string>
+    <string name="act_play_pause">播放 / 暂停</string>
+    <string name="act_next">下一首</string>
+    <string name="act_prev">上一首</string>
+    <string name="act_vol_up">平板音量 +</string>
+    <string name="act_vol_down">平板音量 −</string>
+    <string name="act_mute">静音</string>
+
+    <string name="sec_keys">手机按键</string>
+    <string name="keys_note">Anypad 开着且已连接时生效；其他时候按键照常调手机音量。</string>
+    <string name="sec_pad">触控板</string>
+    <string name="sensitivity">光标速度</string>
+    <string name="scroll_mode">两指滚动方式</string>
+    <string name="scroll_drag">滑动</string>
+    <string name="scroll_wheel">鼠标滚轮</string>
+    <string name="scroll_note">滑动：像手指在屏幕上滑，松手有惯性。鼠标滚轮：一格一格滚，网页等部分 App 用它更好。</string>
+    <string name="scroll_speed">滚动速度</string>
+    <string name="haptics">点击时震动</string>
+    <string name="sec_screen">屏幕</string>
+    <string name="dim">连接时调暗屏幕</string>
+    <string name="dim_note">手机屏幕保持常亮，按键才一直有效。点顶栏可以亮几秒。</string>
+    <string name="sec_other">其他</string>
+    <string name="reset">恢复默认</string>
+    <string name="reset_confirm">把按键映射和触控板设置恢复成默认？</string>
+    <string name="version">版本</string>
+</resources>
