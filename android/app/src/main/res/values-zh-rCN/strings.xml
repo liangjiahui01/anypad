@@ -19,11 +19,12 @@
     <string name="pair_steps">1. 点「继续」，手机可被发现两分钟。\n2. 在平板的蓝牙设置里，配对「%1$s」。\n3. 回到这里，选中平板。\n\n平板以前通过别的 App 配对过的话，先在两边都取消配对。</string>
     <string name="pair_go">继续</string>
 
+    <string name="right_click">右键</string>
     <string name="key_vol_up">音量上</string>
     <string name="key_vol_down">音量下</string>
     <string name="hint_short">%1$s</string>
     <string name="hint_pair">%1$s：%2$s</string>
-    <string name="hint_three_back">侧滑或三指轻点：返回</string>
+    <string name="hint_three_back">三指轻点：返回</string>
     <string name="hint_long">长按%1$s</string>
 
     <string name="act_none">不做事</string>

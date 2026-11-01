@@ -20,11 +20,12 @@
     <string name="pair_steps">1. Tap Continue to make this phone visible for two minutes.\n2. On the tablet, open Bluetooth settings and pair with \"%1$s\".\n3. Come back here and choose the tablet.\n\nIf the tablet was paired before through another app, forget it on both sides first.</string>
     <string name="pair_go">Continue</string>
 
+    <string name="right_click">Right click</string>
     <string name="key_vol_up">Volume up</string>
     <string name="key_vol_down">Volume down</string>
     <string name="hint_short">%1$s</string>
     <string name="hint_pair">%1$s: %2$s</string>
-    <string name="hint_three_back">Edge swipe or three-finger tap: Back</string>
+    <string name="hint_three_back">Three-finger tap: Back</string>
     <string name="hint_long">Hold %1$s</string>
 
     <string name="act_none">Nothing</string>

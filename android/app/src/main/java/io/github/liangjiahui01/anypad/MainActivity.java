@@ -35,6 +35,7 @@ import java.util.Set;
 @SuppressLint("MissingPermission")
 public final class MainActivity extends Activity implements Hid.Listener, PadView.Host {
     private static final int REQ_PERMS = 1;
+    private static final int RIGHT_BAR_DP = 56;
 
     private Hid hid;
     private TextView chip, hint, padTitle, padSub, error;
@@ -94,7 +95,10 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         padBox.setBackground(padBg);
         PadView pad = new PadView(this, hid, this);
         pad.setContentDescription(getString(R.string.pad_desc));
-        padBox.addView(pad, new FrameLayout.LayoutParams(-1, -1));
+        FrameLayout.LayoutParams padLpInner = new FrameLayout.LayoutParams(-1, -1);
+        padLpInner.rightMargin = dp(RIGHT_BAR_DP);
+        padBox.addView(pad, padLpInner);
+        padBox.addView(rightBar(), new FrameLayout.LayoutParams(dp(RIGHT_BAR_DP), -1, Gravity.END));
 
         LinearLayout label = new LinearLayout(this);
         label.setOrientation(LinearLayout.VERTICAL);
@@ -107,12 +111,16 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         padSub.setPadding(dp(24), dp(10), dp(24), 0);
         label.addView(padTitle);
         label.addView(padSub);
-        padBox.addView(label, new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER));
+        FrameLayout.LayoutParams labelLp = new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER);
+        labelLp.rightMargin = dp(RIGHT_BAR_DP); // centred on the trackpad, clear of the right-click strip
+        padBox.addView(label, labelLp);
 
         hint = Ui.text(this, "", 13, Palette.SUB, false);
         hint.setGravity(Gravity.CENTER);
         hint.setPadding(dp(16), 0, dp(16), dp(18));
-        padBox.addView(hint, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
+        FrameLayout.LayoutParams hintLp = new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM);
+        hintLp.rightMargin = dp(RIGHT_BAR_DP);
+        padBox.addView(hint, hintLp);
 
         LinearLayout.LayoutParams padLp = new LinearLayout.LayoutParams(-1, 0, 1);
         padLp.setMargins(dp(12), dp(12), dp(12), dp(10));
@@ -128,6 +136,34 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
         buttons.addView(navButton(R.drawable.ic_nav_recents, R.string.act_recents, Action.RECENTS), weight());
         root.addView(buttons);
         return root;
+    }
+
+    /** A tall strip along the pad's right side: tap for a right click (text menus on a selection). */
+    @SuppressLint("ClickableViewAccessibility")
+    private View rightBar() {
+        TextView t = Ui.text(this, getString(R.string.right_click), 13, Palette.FAINT, false);
+        t.setGravity(Gravity.CENTER);
+        t.setRotation(0);
+        t.setEms(1); // one character a line: the label reads top to bottom
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Palette.KEY);
+        bg.setCornerRadii(new float[]{0, 0, dp(20), dp(20), dp(20), dp(20), 0, 0});
+        t.setBackground(bg);
+        t.setContentDescription(getString(R.string.right_click));
+        t.setOnTouchListener((v, e) -> {
+            if (e.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                if (hid.state() == Hid.CONNECTED) {
+                    hid.press(Hid.RIGHT);
+                    haptic(PadView.TAP);
+                }
+                v.setAlpha(0.6f);
+            } else if (e.getActionMasked() == MotionEvent.ACTION_UP || e.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+                hid.release(Hid.RIGHT);
+                v.setAlpha(1f);
+            }
+            return true;
+        });
+        return t;
     }
 
     private View navButton(int icon, int label, Action action) {
@@ -373,18 +409,6 @@ public final class MainActivity extends Activity implements Hid.Listener, PadVie
     private void screenState() {
         if (hid.state() == Hid.CONNECTED) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-    }
-
-    /**
-     * The phone's own Back (edge swipe or button) goes to the other side while connected, instead of closing
-     * Anypad. Leave the app with the Home gesture.
-     */
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onBackPressed() {
-        if (hid.state() != Hid.CONNECTED) { super.onBackPressed(); return; }
-        Action.BACK.send(hid);
-        haptic(PadView.TAP);
     }
 
     @Override
