@@ -33,11 +33,14 @@ final class Hid {
     static final int OFF = 0, CONNECTING = 1, CONNECTED = 2;
     static final int LEFT = 1, RIGHT = 2, MIDDLE = 4;
 
-    private static final byte ID_MOUSE = 1, ID_KEYBOARD = 2, ID_CONSUMER = 3;
+    private static final byte ID_MOUSE = 1, ID_KEYBOARD = 2, ID_CONSUMER = 3, ID_TOUCH = 4, ID_TOUCH_MAX = 5;
+    static final int TOUCH_MAX = 32767; // touch coordinates run 0..TOUCH_MAX across the other side's screen
 
     // Report 1: 5 buttons, 16-bit relative X/Y, wheel, horizontal pan (AC Pan).
     // Report 2: a boot-style keyboard (modifiers + 6 keys).
     // Report 3: one 16-bit consumer usage (Back, Home, play/pause, volume...).
+    // Report 4: a one-finger touch screen, so a swipe reaches the other side as a real finger swipe
+    //           (report 5 is its "how many fingers at most" feature).
     private static final byte[] DESCRIPTOR = bytes(
         0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x85, ID_MOUSE,
         0x09, 0x01, 0xA1, 0x00,
@@ -56,6 +59,19 @@ final class Hid {
 
         0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, ID_CONSUMER,
         0x15, 0x00, 0x26, 0xFF, 0x03, 0x19, 0x00, 0x2A, 0xFF, 0x03, 0x75, 0x10, 0x95, 0x01, 0x81, 0x00,
+        0xC0,
+
+        0x05, 0x0D, 0x09, 0x04, 0xA1, 0x01, 0x85, ID_TOUCH,
+        0x09, 0x22, 0xA1, 0x02,
+        0x09, 0x42, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x01, 0x81, 0x02,   // tip switch
+        0x09, 0x32, 0x81, 0x02,                                                   // in range
+        0x95, 0x06, 0x81, 0x03,
+        0x75, 0x08, 0x09, 0x51, 0x25, 0x7F, 0x95, 0x01, 0x81, 0x02,               // contact id
+        0x05, 0x01, 0x26, 0xFF, 0x7F, 0x75, 0x10, 0x95, 0x01,
+        0x09, 0x30, 0x81, 0x02, 0x09, 0x31, 0x81, 0x02,                           // x, y
+        0xC0,
+        0x05, 0x0D, 0x09, 0x54, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x01, 0x81, 0x02,   // contact count
+        0x85, ID_TOUCH_MAX, 0x09, 0x55, 0x25, 0x0A, 0xB1, 0x02,                   // contact count maximum
         0xC0);
 
     private static final long FRAME_MS = 8; // at most ~120 mouse reports a second
@@ -89,8 +105,6 @@ final class Hid {
     private float accX, accY, accWheel, accPan;
     private boolean flushQueued;
     private long lastSent;
-    private boolean recording;
-    private final ArrayList<long[]> recorded = new ArrayList<>(); // {dx, dy, gap ms}
     private long sent, failed, lastLog;
 
     private Hid(Context app) {
@@ -259,7 +273,7 @@ final class Hid {
                 } else if (s == BluetoothProfile.STATE_DISCONNECTED) {
                     if (device == null || device.equals(d)) {
                         setState(device, OFF);
-                        io.post(() -> { buttons = 0; recording = false; });
+                        io.post(() -> buttons = 0);
                         main.removeCallbacks(retry);
                         main.postDelayed(retry, 1500);
                     }
@@ -268,8 +282,10 @@ final class Hid {
         }
 
         @Override public void onGetReport(BluetoothDevice d, byte type, byte id, int size) {
-            int len = id == ID_MOUSE ? 7 : id == ID_KEYBOARD ? 8 : 2;
-            if (proxy != null) proxy.replyReport(d, type, id, new byte[len]);
+            if (proxy == null) return;
+            if (id == ID_TOUCH_MAX) { proxy.replyReport(d, type, id, new byte[]{1}); return; }
+            int len = id == ID_MOUSE ? 7 : id == ID_KEYBOARD ? 8 : id == ID_TOUCH ? 7 : 2;
+            proxy.replyReport(d, type, id, new byte[len]);
         }
 
         @Override public void onSetReport(BluetoothDevice d, byte type, byte id, byte[] data) {
@@ -326,27 +342,12 @@ final class Hid {
         io.post(() -> { flush(); buttons = 0; sendMouse(0, 0, 0, 0); });
     }
 
-    /** Records the movement sent from now on, so it can be undone with {@link #rewind()}. */
-    void record() {
-        io.post(() -> { flush(); recorded.clear(); recording = true; });
-    }
-
-    /**
-     * Moves the pointer back where recording started: the same steps reversed, with the same timing,
-     * so the other side's pointer acceleration takes them back the same distance.
-     */
-    void rewind() {
+    /** One finger on the other side's screen: down (or moving) at x, y, or lifted there. */
+    void touch(boolean down, int x, int y) {
+        int cx = Math.max(0, Math.min(TOUCH_MAX, x)), cy = Math.max(0, Math.min(TOUCH_MAX, y));
         io.post(() -> {
-            flush();
-            recording = false;
-            long at = SystemClock.uptimeMillis();
-            for (int i = recorded.size() - 1; i >= 0; i--) {
-                long[] r = recorded.get(i);
-                at += Math.max(r[2], FRAME_MS);
-                int x = (int) -r[0], y = (int) -r[1];
-                io.postAtTime(() -> sendMouse(x, y, 0, 0), at);
-            }
-            recorded.clear();
+            lastSent = SystemClock.uptimeMillis();
+            send(ID_TOUCH, new byte[]{(byte) (down ? 3 : 0), 0, (byte) cx, (byte) (cx >> 8), (byte) cy, (byte) (cy >> 8), 1});
         });
     }
 
@@ -378,8 +379,6 @@ final class Hid {
         int w = clamp((int) accWheel, 127), p = clamp((int) accPan, 127);
         if (x == 0 && y == 0 && w == 0 && p == 0) return;
         accX -= x; accY -= y; accWheel -= w; accPan -= p;
-        long now = SystemClock.uptimeMillis();
-        if (recording && (x != 0 || y != 0)) recorded.add(new long[]{x, y, recorded.isEmpty() ? 0 : now - lastSent});
         sendMouse(x, y, w, p);
         // Whatever did not fit goes in the next report
         if ((int) accX != 0 || (int) accY != 0 || (int) accWheel != 0 || (int) accPan != 0) queueFlush();

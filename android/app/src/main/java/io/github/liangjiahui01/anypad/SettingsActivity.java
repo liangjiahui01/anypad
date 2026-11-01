@@ -65,8 +65,10 @@ public final class SettingsActivity extends Activity {
         slider(R.string.sensitivity, 0.4f, 3f, Prefs.sensitivity(this), v -> Prefs.sensitivity(this, v));
         String mode = Prefs.scrollMode(this);
         row(getString(R.string.scroll_mode),
-            getString(Prefs.SCROLL_WHEEL.equals(mode) ? R.string.scroll_wheel : R.string.scroll_drag), v -> pickScroll());
+            getString(Prefs.SCROLL_WHEEL.equals(mode) ? R.string.scroll_wheel : R.string.scroll_touch), v -> pickScroll());
         note(R.string.scroll_note);
+        row(getString(R.string.swipe_turns), (Prefs.swipeTurns(this) * 90) + "°", v -> pickTurns());
+        note(R.string.swipe_turns_note);
         slider(R.string.scroll_speed, 0.4f, 3f, Prefs.scrollSpeed(this), v -> Prefs.scrollSpeed(this, v));
         toggle(R.string.haptics, Prefs.haptics(this), v -> Prefs.haptics(this, v));
 
@@ -101,13 +103,25 @@ public final class SettingsActivity extends Activity {
     }
 
     private void pickScroll() {
-        String[] modes = {Prefs.SCROLL_DRAG, Prefs.SCROLL_WHEEL};
-        String[] names = {getString(R.string.scroll_drag), getString(R.string.scroll_wheel)};
+        String[] modes = {Prefs.SCROLL_TOUCH, Prefs.SCROLL_WHEEL};
+        String[] names = {getString(R.string.scroll_touch), getString(R.string.scroll_wheel)};
         int checked = Prefs.SCROLL_WHEEL.equals(Prefs.scrollMode(this)) ? 1 : 0;
         new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle(R.string.scroll_mode)
             .setSingleChoiceItems(names, checked, (d, i) -> {
                 Prefs.scrollMode(this, modes[i]);
+                d.dismiss();
+                render();
+            })
+            .show();
+    }
+
+    private void pickTurns() {
+        String[] names = {"0°", "90°", "180°", "270°"};
+        new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle(R.string.swipe_turns)
+            .setSingleChoiceItems(names, Prefs.swipeTurns(this), (d, i) -> {
+                Prefs.swipeTurns(this, i);
                 d.dismiss();
                 render();
             })
